@@ -2,6 +2,9 @@ from django.shortcuts import render, redirect
 from django.db.models import Q
 from django.utils import timezone
 from django.contrib import messages
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.urls import reverse
 from .models import Wallet, Transaction, Block
 from .blockchain.POW import proof_of_work
 from .blockchain.BLOCKCHAIN import Blockchain
@@ -46,14 +49,29 @@ def generate_wallet():
 
 
 def create_wallet_view(request):
+    # Nếu là GET request, chỉ hiển thị trang tạo ví ban đầu
+    if request.method == 'GET':
+        return render(request, 'createwallet.html')
+
+    # Nếu là POST request (được gọi từ AJAX)
     if request.method == 'POST':
         priv, pub, addr = generate_wallet()
         wallet = Wallet.objects.create(address=addr, public_key=pub, private_key=priv, balance=1000)
+        
+        # Lưu wallet vào session để người dùng được "đăng nhập" ngay lập tức
         request.session['wallet_id'] = wallet.id
         request.session['wallet_address'] = addr
-        return render(request, 'createdwallet.html', {'wallet': wallet})
-    
-    return render(request, 'createwallet.html')
+
+        # Chuẩn bị dữ liệu để trả về cho JavaScript
+        wallet_data = {
+            'address': wallet.address,
+            'public_key': wallet.public_key,
+            'private_key': wallet.private_key, # Chỉ gửi private key MỘT LẦN này thôi
+        }
+        
+        return JsonResponse({'success': True, 'wallet': wallet_data})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
 # ========== Gửi giao dịch ==========
@@ -75,13 +93,11 @@ def send_transaction_view(request):
             messages.error(request, "Số dư không đủ.")
             return redirect('send_transaction')
 
-        # Trừ tiền người gửi, cộng tiền người nhận
         sender_wallet.balance -= amount
         receiver_wallet.balance += amount
         sender_wallet.save()
         receiver_wallet.save()
 
-        # Tạo giao dịch mới
         last_tx = Transaction.objects.order_by('-id').first()
         previous_hash = last_tx.hash if last_tx else '0'
         timestamp = timezone.now()
@@ -99,26 +115,37 @@ def send_transaction_view(request):
             nonce=nonce,
             hash=tx_hash,
         )
-
-        # Gửi sự kiện tới WebSocket
+        
+        # 1. Lấy channel layer
         channel_layer = get_channel_layer()
+        detail_url = reverse('transaction_detail', kwargs={'transaction_id': tx.id})
+
+        # 2. Chuẩn bị dữ liệu để gửi đi
+        message_data = {
+            'type': 'wallet_update',
+            'balance': str(receiver_wallet.balance),
+            'transaction': {
+                'sender': tx.sender,
+                'receiver': tx.receiver,
+                'amount': str(tx.amount),
+                'timestamp': tx.timestamp.isoformat(),
+                'message': tx.message,
+                'detail_url': detail_url,
+            }
+        }
+
+        # 3. Gửi tin nhắn tới group của người nhận
         async_to_sync(channel_layer.group_send)(
-            f'wallet_{receiver_address}',
+            f"wallet_{receiver_address}",
             {
-                'type': 'send_transaction',
-                'data': {
-                    'sender': sender_address,
-                    'amount': amount,
-                    'message': message,
-                }
+                'type': 'wallet.update',
+                'message': message_data 
             }
         )
-
         messages.success(request, "Giao dịch thành công và đã được xác minh bằng Proof of Work.")
         return redirect('transaction_receipt', transaction_id=tx.id)
 
     return render(request, 'send_transaction.html')
-
 
 # ========== Biên lai giao dịch ==========
 def transaction_receipt(request, transaction_id):
@@ -136,6 +163,17 @@ def transaction_receipt(request, transaction_id):
         'receiver_wallet': receiver_wallet,
     })
 
+def transaction_detail_view(request, transaction_id):
+    """
+    Hiển thị thông tin chi tiết của một giao dịch duy nhất.
+    """
+    # get_object_or_404 là một cách gọn gàng để lấy object hoặc trả về lỗi 404 nếu không tìm thấy
+    transaction = get_object_or_404(Transaction, id=transaction_id)
+    
+    context = {
+        'transaction': transaction
+    }
+    return render(request, 'transaction_detail.html', context)
 
 # ========== Mine Block (Proof of Work) ==========
 def mine_block_view(request):
