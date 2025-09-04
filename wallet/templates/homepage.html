@@ -1,30 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Blockchain Wallet Dashboard</title>
 
-    <!-- Google Fonts - Poppins -->
+    <!-- Google Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-
-    <!-- Bootstrap CSS -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-      crossorigin="anonymous"
-    />
-    <!-- Bootstrap Icons -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
 
     <!-- Custom CSS -->
     <style>
@@ -32,72 +19,29 @@
         font-family: "Poppins", sans-serif;
         background-color: #f8f9fa;
       }
-      .navbar-brand {
-        font-weight: 600;
-      }
-      .card {
-        border: none;
-        transition: transform 0.2s ease-in-out;
-      }
-      .card:hover {
-        transform: translateY(-5px);
-      }
-      .card-title {
-        font-weight: 600;
-        color: #343a40;
-      }
-      .balance-amount {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #0d6efd;
-      }
-      .wallet-address {
-        font-family: monospace;
-        font-size: 0.9rem;
-        word-break: break-all;
-        background-color: #e9ecef;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-      }
-      .table-hover tbody tr:hover {
-        background-color: #eef5ff;
-      }
-      .btn-primary {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
-      }
-      .btn-primary:hover {
-        background-color: #0b5ed7;
-        border-color: #0a58ca;
-      }
+      .navbar-brand { font-weight: 600; }
+      .card { border: none; transition: transform 0.2s ease-in-out; }
+      .card:hover { transform: translateY(-5px); }
+      .card-title { font-weight: 600; color: #343a40; }
+      .balance-amount { font-size: 2.5rem; font-weight: 700; color: #0d6efd; }
+      .wallet-address { font-family: monospace; font-size: 0.9rem; }
+      .table-hover tbody tr:hover { background-color: #eef5ff; }
     </style>
-
-    <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
   </head>
 
   <body>
+    <!-- TOAST -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100"></div>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
       <div class="container">
-        <a class="navbar-brand text-primary" href="#">
-          <i class="bi bi-wallet2 me-2"></i>My Wallet
-        </a>
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-        >
+        <a class="navbar-brand text-primary" href="#"><i class="bi bi-wallet2 me-2"></i>My Wallet</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link active" href="#">Dashboard</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Settings</a>
-            </li>
+            <li class="nav-item"><a class="nav-link active" href="#">Dashboard</a></li>
           </ul>
         </div>
       </div>
@@ -111,22 +55,20 @@
         <!-- Wallet Balance Card -->
         <div class="col-lg-8">
           <div class="card shadow-sm rounded-4 h-100">
-            <div
-              class="card-body p-4 d-flex flex-column justify-content-between"
-            >
+            <div class="card-body p-4 d-flex flex-column justify-content-between">
               <div>
                 <h5 class="card-title text-muted mb-2">Tổng số dư</h5>
-                <p class="balance-amount">{{ wallet.balance }} <span class="fs-5 text-muted">MYC</span></p>
+                <p class="balance-amount"><span id="balanceDisplay">{{ wallet.balance }}</span> <span class="fs-5 text-muted">MYC</span></p>
               </div>
               <div>
                 <label for="walletAddressDisplay" class="form-label small text-muted mb-1">Địa chỉ ví:</label>
-              <div class="input-group">
-                <input type="text" class="form-control wallet-address" id="walletAddressDisplay" value="{{ wallet.address }}" readonly style="background-color: #e9ecef; border-right: none;">
-                <button class="btn btn-outline-secondary" type="button" id="copyButton" data-bs-toggle="tooltip" data-bs-placement="top" title="Sao chép địa chỉ">
+                <div class="input-group">
+                  <input type="text" class="form-control wallet-address" id="walletAddressDisplay" value="{{ wallet.address }}" readonly style="background-color: #e9ecef; border-right: none;">
+                  <button class="btn btn-outline-secondary" type="button" id="copyButton" data-bs-toggle="tooltip" title="Sao chép địa chỉ">
                     <i class="bi bi-clipboard"></i>
-                </button>
+                  </button>
+                </div>
               </div>
-            </div>
             </div>
           </div>
         </div>
@@ -134,21 +76,10 @@
         <!-- Actions Card -->
         <div class="col-lg-4">
           <div class="card shadow-sm rounded-4 h-100">
-            <div
-              class="card-body p-4 d-flex flex-column justify-content-center align-items-center text-center gap-3"
-            >
+            <div class="card-body p-4 d-flex flex-column justify-content-center align-items-center text-center gap-3">
               <h5 class="card-title mb-3">Thực hiện giao dịch</h5>
-              <a
-                href="{% url 'send_transaction' %}"
-                class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center gap-2"
-              >
+              <a href="{% url 'send_transaction' %}" class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center gap-2">
                 <i class="bi bi-send-fill"></i> Gửi Coin
-              </a>
-              <a
-                href="#"
-                class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2"
-              >
-                <i class="bi bi-arrow-down-left-circle-fill"></i> Nhận Coin
               </a>
             </div>
           </div>
@@ -160,9 +91,7 @@
             <div class="card-body p-5 text-center">
               <i class="bi bi-exclamation-triangle-fill text-warning fs-1 mb-3"></i>
               <h5 class="card-title">Chưa có ví nào được chọn</h5>
-              <p class="text-muted">
-                Vui lòng tạo một ví mới để bắt đầu quản lý tài sản của bạn.
-              </p>
+              <p class="text-muted">Vui lòng tạo một ví mới để bắt đầu quản lý tài sản của bạn.</p>
               <a href="{% url 'create_wallet' %}" class="btn btn-primary mt-3">
                 <i class="bi bi-plus-circle-fill me-2"></i>Tạo ví mới
               </a>
@@ -175,13 +104,8 @@
       <!-- Transaction History -->
       <div class="card shadow-sm rounded-4">
         <div class="card-body p-4">
-          <div
-            class="d-flex justify-content-between align-items-center mb-3"
-          >
+          <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="card-title mb-0">Lịch sử giao dịch</h5>
-            <a href="#" class="btn btn-sm btn-outline-primary">
-              Xem tất cả <i class="bi bi-arrow-right-short"></i>
-            </a>
           </div>
           <div class="table-responsive">
             <table class="table table-hover align-middle">
@@ -193,36 +117,30 @@
                   <th scope="col" class="d-none d-md-table-cell">Thời gian</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="transaction-table-body">
                 {% for tx in transactions %}
                 <tr>
                   <td>
                     {% if tx.sender == wallet.address %}
-                    <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill p-2">
-                        <i class="bi bi-arrow-up-right-circle-fill me-1"></i> Gửi
-                    </span>
+                    <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill p-2"><i class="bi bi-arrow-up-right-circle-fill me-1"></i> Gửi</span>
                     {% else %}
-                     <span class="badge bg-success-subtle text-success-emphasis rounded-pill p-2">
-                        <i class="bi bi-arrow-down-left-circle-fill me-1"></i> Nhận
-                    </span>
+                    <span class="badge bg-success-subtle text-success-emphasis rounded-pill p-2"><i class="bi bi-arrow-down-left-circle-fill me-1"></i> Nhận</span>
                     {% endif %}
                   </td>
                   <td>
-                    <div class="fw-bold">
-                      {% if tx.sender == wallet.address %} {{ tx.receiver|truncatechars:20 }} {% else %} {{ tx.sender|truncatechars:20 }} {% endif %}
-                    </div>
+                    <a href="{% url 'transaction_detail' transaction_id=tx.id %}" class="text-decoration-none">
+                        <div class="fw-bold text-truncate" style="max-width: 150px;" title="{% if tx.sender == wallet.address %}{{ tx.receiver }}{% else %}{{ tx.sender }}{% endif %}">
+                            {% if tx.sender == wallet.address %} {{ tx.receiver|truncatechars:20 }} {% else %} {{ tx.sender|truncatechars:20 }} {% endif %}
+                        </div>
+                    </a>
                   </td>
-                  <td class="text-end fw-bold">
-                    {% if tx.sender == wallet.address %} - {% else %} + {% endif %} {{ tx.amount }} MYC
-                  </td>
+                  <td class="text-end fw-bold">{% if tx.sender == wallet.address %} - {% else %} + {% endif %}{{ tx.amount }} MYC</td>
                   <td class="text-muted d-none d-md-table-cell">{{ tx.timestamp|date:"d M, Y H:i" }}</td>
                 </tr>
                 {% empty %}
-                <tr>
-                  <td colspan="4" class="text-center text-muted p-4">
-                    <i class="bi bi-clock-history d-block fs-2 mb-2"></i>
-                    Chưa có giao dịch nào
-                  </td>
+                <!-- ĐÃ THÊM ID VÀO ĐÂY -->
+                <tr id="no-transactions-row">
+                  <td colspan="4" class="text-center text-muted p-4"><i class="bi bi-clock-history d-block fs-2 mb-2"></i>Chưa có giao dịch nào</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -233,44 +151,127 @@
     </main>
 
     <!-- Bootstrap JS Bundle -->
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-      crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
     <script>
-      const copyButton = document.getElementById('copyButton');
-      if (copyButton) {
+      // Chạy script sau khi toàn bộ trang đã được tải
+      document.addEventListener('DOMContentLoaded', function() {
+
+        // --- KHỐI SAO CHÉP ĐỊA CHỈ VÍ ---
+        const copyButton = document.getElementById('copyButton');
+        if (copyButton) {
           const tooltip = new bootstrap.Tooltip(copyButton);
-
           copyButton.addEventListener('click', function() {
-              const walletAddressInput = document.getElementById('walletAddressDisplay');
-              const addressToCopy = walletAddressInput.value;
-
-              // Sử dụng Clipboard API để sao chép
-              navigator.clipboard.writeText(addressToCopy).then(() => {
-                  // Phản hồi thành công cho người dùng
-                  // 1. Thay đổi nội dung tooltip và hiển thị nó
-                  copyButton.setAttribute('data-bs-original-title', 'Đã sao chép!');
-                  tooltip.show();
-
-                  // 2. Thay đổi icon thành dấu check
-                  copyButton.innerHTML = '<i class="bi bi-check-lg"></i>';
-
-                  // 3. Sau 2 giây, trả lại trạng thái ban đầu
-                  setTimeout(() => {
-                      copyButton.setAttribute('data-bs-original-title', 'Sao chép địa chỉ');
-                      tooltip.hide();
-                      copyButton.innerHTML = '<i class="bi bi-clipboard"></i>';
-                  }, 2000);
-
-              }).catch(err => {
-                  console.error('Lỗi khi sao chép địa chỉ: ', err);
-                  // Bạn có thể thêm phản hồi lỗi ở đây nếu muốn
-                  copyButton.setAttribute('data-bs-original-title', 'Sao chép thất bại!');
-                  tooltip.show();
-              });
+            const walletAddressInput = document.getElementById('walletAddressDisplay');
+            navigator.clipboard.writeText(walletAddressInput.value).then(() => {
+              copyButton.setAttribute('data-bs-original-title', 'Đã sao chép!');
+              tooltip.show();
+              copyButton.innerHTML = '<i class="bi bi-check-lg"></i>';
+              setTimeout(() => {
+                copyButton.setAttribute('data-bs-original-title', 'Sao chép địa chỉ');
+                tooltip.hide();
+                copyButton.innerHTML = '<i class="bi bi-clipboard"></i>';
+              }, 2000);
+            }).catch(err => console.error('Lỗi khi sao chép: ', err));
           });
-      }
-  </script>
+        }
+        
+        // --- KHỐI WEBSOCKET CẬP NHẬT REAL-TIME ---
+        const walletAddress = "{{ wallet.address|default:'' }}";
+        if (walletAddress) {
+          const socket = new WebSocket(`ws://${window.location.host}/ws/transactions/${walletAddress}/`);
+
+          socket.onopen = function(e) { console.log("✅ Kết nối WebSocket thành công!"); };
+          socket.onerror = function(e) { console.error("🚨 Lỗi kết nối WebSocket:", e); };
+
+          // CHỈ CÓ MỘT HÀM socket.onmessage DUY NHẤT VÀ HOÀN CHỈNH
+          socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            if (data.type === "wallet_update") {
+              
+              const transaction = data.transaction;
+
+              // 1. Hiển thị toast thông báo
+              showTransactionToast(transaction);
+
+              // 2. Cập nhật số dư
+              document.getElementById('balanceDisplay').textContent = data.balance;
+              
+              // 3. Cập nhật bảng giao dịch
+              const tableBody = document.getElementById('transaction-table-body');
+              const noTxRow = document.getElementById('no-transactions-row');
+              if (noTxRow) noTxRow.remove();
+
+              const newRow = tableBody.insertRow(0);
+              const txTimestamp = new Date(transaction.timestamp).toLocaleString('vi-VN');
+
+              // Logic để xác định giao dịch là Gửi hay Nhận từ góc nhìn của người dùng hiện tại
+              const isSender = transaction.sender === walletAddress;
+              const displayAddress = isSender ? transaction.receiver : transaction.sender;
+              
+              // Tạo HTML cho dòng mới, BAO GỒM CẢ THẺ <a> với href đúng
+              newRow.innerHTML = `
+                <td>
+                  ${isSender 
+                      ? `<span class="badge bg-danger-subtle text-danger-emphasis rounded-pill p-2"><i class="bi bi-arrow-up-right-circle-fill me-1"></i> Gửi</span>` 
+                      : `<span class="badge bg-success-subtle text-success-emphasis rounded-pill p-2"><i class="bi bi-arrow-down-left-circle-fill me-1"></i> Nhận</span>`
+                  }
+                </td>
+                <td>
+                  <a href="${transaction.detail_url}" class="text-decoration-none" title="Xem chi tiết giao dịch">
+                      <div class="fw-bold text-truncate" style="max-width: 150px;">
+                          ${displayAddress}
+                      </div>
+                  </a>
+                </td>
+                <td class="text-end fw-bold">
+                  ${isSender ? '-' : '+'} ${transaction.amount} MYC
+                </td>
+                <td class="text-muted d-none d-md-table-cell">${txTimestamp}</td>
+              `;
+            }
+          };
+        }
+
+        // HÀM HIỂN THỊ TOAST (giữ nguyên, đã đúng)
+        function showTransactionToast(transaction) {
+          const toastContainer = document.querySelector('.toast-container');
+          if (!toastContainer) return;
+          
+          const truncateAddress = (address, startChars = 6, endChars = 4) => {
+            if (!address) return '';
+            return `${address.substring(0, startChars)}...${address.substring(address.length - endChars)}`;
+          };
+          
+          const toastHTML = `
+            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+              <div class="toast-header">
+                <i class="bi bi-bell-fill text-success me-2"></i>
+                <strong class="me-auto">Giao dịch mới</strong>
+                <small class="text-muted">vừa xong</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+              </div>
+              <div class="toast-body">
+                <div>
+                  Bạn nhận được <strong class="text-success">${transaction.amount} MYC</strong>
+                  từ ví: <span class="fw-bold d-block text-truncate">${truncateAddress(transaction.sender)}</span>
+                </div>
+                ${transaction.message ? `<div class="mt-2 pt-2 border-top"><strong>Lời nhắn:</strong> ${transaction.message}</div>` : ''}
+              </div>
+            </div>
+          `;
+          toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+          const newToastEl = toastContainer.lastElementChild;
+          if (newToastEl) {
+            const toast = new bootstrap.Toast(newToastEl, {
+              autohide: true,
+              delay: 7000
+            });
+            toast.show();
+            newToastEl.addEventListener('hidden.bs.toast', () => { newToastEl.remove(); });
+          }
+        }
+      });
+    </script>
   </body>
 </html>

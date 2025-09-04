@@ -1,25 +1,195 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tạo Ví Mới</title>
     
-    <link rel="stylesheet" href="/static/styles.css">
-    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <!-- Google Fonts, Bootstrap CSS & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; }
+        .navbar-brand { font-weight: 600; }
+        .container-wrapper { min-height: calc(100vh - 56px); }
+        .card { border: none; }
+        .private-key-warning { background-color: #fff3cd; border-left: 4px solid #ffc107; }
+        .key-display { font-family: monospace; background-color: #e9ecef; }
+    </style>
+</head>
+<body>
+    <!-- Vùng chứa Toast -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100"></div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand text-primary" href="{% url 'home' %}"><i class="bi bi-wallet2 me-2"></i>My Wallet</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container d-flex align-items-center justify-content-center container-wrapper">
+        <div class="col-12 col-md-10 col-lg-8">
+            <div class="card shadow-sm rounded-4">
+                <div class="card-body p-4 p-sm-5">
+
+                    <!-- Màn hình ban đầu: Nút tạo ví -->
+                    <div id="initial-view">
+                        <div class="text-center">
+                            <i class="bi bi-wallet-plus text-primary" style="font-size: 4rem;"></i>
+                            <h3 class="mt-3">Tạo Ví Blockchain Mới</h3>
+                            <p class="text-muted">Bắt đầu hành trình của bạn trong thế giới blockchain bằng cách tạo một ví an toàn.</p>
+                            <form id="createWalletForm" method="POST" action="{% url 'create_wallet' %}">
+                                {% csrf_token %}
+                                <button type="submit" id="createWalletBtn" class="btn btn-primary btn-lg mt-3 d-inline-flex align-items-center gap-2">
+                                    <span id="button-icon"><i class="bi bi-plus-circle-fill"></i></span>
+                                    <span id="button-text">Tạo ví ngay</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Màn hình kết quả: Hiển thị thông tin ví (bị ẩn ban đầu) -->
+                    <div id="wallet-details-view" class="d-none">
+                        <div class="text-center mb-4">
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                            <h3 class="mt-3">Tạo Ví Thành Công!</h3>
+                            <p class="text-muted">Ví của bạn đã sẵn sàng để sử dụng.</p>
+                        </div>
+
+                        <div class="private-key-warning p-3 rounded mb-4">
+                            <h5 class="fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Quan trọng!</h5>
+                            <p class="mb-0">Hãy sao chép và cất giữ **Khóa Riêng Tư (Private Key)** của bạn ở một nơi an toàn. Đây là lần duy nhất nó được hiển thị. Mất khóa này đồng nghĩa với việc mất toàn bộ tài sản trong ví.</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Địa chỉ ví (Address)</label>
+                            <div class="input-group">
+                                <input type="text" id="walletAddress" class="form-control key-display" readonly>
+                                <button class="btn btn-outline-secondary btn-copy" data-copy-target="#walletAddress" title="Sao chép"><i class="bi bi-clipboard"></i></button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Khóa Công Khai (Public Key)</label>
+                            <div class="input-group">
+                                <input type="text" id="walletPublicKey" class="form-control key-display" readonly>
+                                <button class="btn btn-outline-secondary btn-copy" data-copy-target="#walletPublicKey" title="Sao chép"><i class="bi bi-clipboard"></i></button>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-danger fw-bold">Khóa Riêng Tư (Private Key)</label>
+                            <div class="input-group">
+                                <input type="text" id="walletPrivateKey" class="form-control key-display" readonly>
+                                <button class="btn btn-outline-secondary btn-copy" data-copy-target="#walletPrivateKey" title="Sao chép"><i class="bi bi-clipboard"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <a href="{% url 'home' %}" class="btn btn-success btn-lg">Đi đến Dashboard</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-</head>
-<body class="bg-light">
-<div class="container mt-5">
-    <div class="card shadow p-4">
-        <h2 class="mb-4 text-primary">Tạo Ví Blockchain</h2>
-        <form method="POST">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-success">Tạo ví mới</button>
-        </form>
-    </div>
-</div>
+    <!-- Custom JavaScript -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('createWalletForm');
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Ngăn form gửi theo cách truyền thống
+
+            const createBtn = document.getElementById('createWalletBtn');
+            const buttonText = document.getElementById('button-text');
+            const buttonIcon = document.getElementById('button-icon');
+
+            // Hiển thị trạng thái đang xử lý
+            buttonText.textContent = 'Đang tạo...';
+            buttonIcon.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>`;
+            createBtn.disabled = true;
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Cập nhật các trường thông tin ví
+                    document.getElementById('walletAddress').value = data.wallet.address;
+                    document.getElementById('walletPublicKey').value = data.wallet.public_key;
+                    document.getElementById('walletPrivateKey').value = data.wallet.private_key;
+
+                    // Chuyển đổi giao diện
+                    document.getElementById('initial-view').classList.add('d-none');
+                    document.getElementById('wallet-details-view').classList.remove('d-none');
+
+                    // Hiển thị toast thông báo thành công
+                    showCreationToast();
+                } else {
+                    alert('Lỗi: ' + data.error);
+                    // Khôi phục nút bấm
+                    buttonText.textContent = 'Tạo ví ngay';
+                    buttonIcon.innerHTML = `<i class="bi bi-plus-circle-fill"></i>`;
+                    createBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.');
+                 // Khôi phục nút bấm
+                buttonText.textContent = 'Tạo ví ngay';
+                buttonIcon.innerHTML = `<i class="bi bi-plus-circle-fill"></i>`;
+                createBtn.disabled = false;
+            });
+        });
+
+        // Hàm hiển thị Toast
+        function showCreationToast() {
+            const toastContainer = document.querySelector('.toast-container');
+            const toastHTML = `
+                <div class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            Ví mới đã được tạo thành công!
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>`;
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+            const newToast = new bootstrap.Toast(toastContainer.lastElementChild, { delay: 5000 });
+            newToast.show();
+        }
+
+        // Logic cho các nút sao chép
+        document.querySelectorAll('.btn-copy').forEach(button => {
+            const tooltip = new bootstrap.Tooltip(button);
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-copy-target');
+                const targetInput = document.querySelector(targetId);
+                navigator.clipboard.writeText(targetInput.value).then(() => {
+                    button.setAttribute('data-bs-original-title', 'Đã sao chép!');
+                    tooltip.show();
+                    setTimeout(() => { tooltip.hide(); button.setAttribute('data-bs-original-title', 'Sao chép'); }, 2000);
+                });
+            });
+        });
+    });
+    </script>
 </body>
 </html>

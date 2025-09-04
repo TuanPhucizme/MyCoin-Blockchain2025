@@ -139,9 +139,9 @@
         // --- WebSocket Logic ---
         // Đoạn code này để nhận thông báo nếu có người khác gửi tiền cho bạn
         // khi bạn đang xem trang này.
-        const txid = "{{ transaction.id }}";   // truyền từ view khi render receipt
+        const walletAddress = "{{ sender_wallet.address }}";
         if (txid) {
-            const socket = new WebSocket(`ws://${window.location.host}/ws/transactions/${txid}/`);
+            const socket = new WebSocket(`ws://${window.location.host}/ws/transactions/${walletAddress}/`);
 
             socket.onmessage = function(e) {
                 const data = JSON.parse(e.data);
