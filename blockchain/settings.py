@@ -27,8 +27,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-ASGI_APPLICATION = 'blockchain.asgi.application'
 # Application definition
+ASGI_APPLICATION = "blockchain.asgi.application"
+
+WSGI_APPLICATION = 'blockchain.wsgi.application'
 
 INSTALLED_APPS = [
     'channels',
@@ -67,10 +69,6 @@ TEMPLATES = [
         },
     },
 ]
-
-ASGI_APPLICATION = "blockchain.asgi.application"
-
-WSGI_APPLICATION = 'blockchain.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases

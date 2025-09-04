@@ -27,6 +27,6 @@ urlpatterns = [
 
     path('send_transaction/', wallet_views.send_transaction_view, name='send_transaction'),
     path('transaction_receipt/<int:transaction_id>/', wallet_views.transaction_receipt, name='transaction_receipt'),
-
+    path('transaction/<int:transaction_id>/', wallet_views.transaction_detail_view, name='transaction_detail'),
 
 ]
