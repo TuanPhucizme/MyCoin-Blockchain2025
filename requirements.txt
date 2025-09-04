@@ -1,0 +1,12 @@
+# Django Framework
+django==5.0.7
+
+# For WebSocket and real-time features
+channels==4.0.0
+asgiref==3.8.1
+
+# For cryptographic operations (wallet generation)
+ecdsa==0.19.0
+
+# Optional: For better performance with Channels in production
+# channels-redis==4.2.0
