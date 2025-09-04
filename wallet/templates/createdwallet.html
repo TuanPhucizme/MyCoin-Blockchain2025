@@ -1,0 +1,58 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ví đã tạo</title>
+
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="card shadow p-4">
+        <h2 class="text-success mb-3">🎉 Ví của bạn đã được tạo thành công!</h2>
+
+        <div class="mb-3">
+            <strong>Địa chỉ ví (Address):</strong>
+            <pre>{{ wallet.address }}</pre>
+        </div>
+
+        <div class="mb-3">
+            <strong>Public Key:</strong>
+            <pre>{{ wallet.public_key }}</pre>
+        </div>
+
+        <div class="mb-3">
+            <strong>Private Key:</strong>
+            <pre id="privateKey" style="display: none;">{{ wallet.private_key }}</pre>
+            <button class="btn btn-sm btn-outline-secondary mb-2" onclick="toggleKey()">👁 Hiện/Ẩn Private Key</button>
+            <div class="text-danger"><em>⚠️ Không chia sẻ Private Key với bất kỳ ai!</em></div>
+        </div>
+
+        <div class="mb-3 text-center d-flex justify-content-center gap-3">
+            <button class="btn btn btn-outline-primary" onclick="copyToClipboard('{{ wallet.address }}')">Copy</button>
+            <!-- Nút quay về homepage -->
+            <button onclick="location.href='{% url 'home' %}'" class="btn btn btn-primary">Trang chủ</button>
+        </div>
+    </div>
+</div>
+</body>
+
+<script>
+    function toggleKey() {
+        const pre = document.getElementById("privateKey");
+        pre.style.display = pre.style.display === "none" ? "block" : "none";
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Đã sao chép vào clipboard!");
+        });
+    }
+</script>
+
+</html>
