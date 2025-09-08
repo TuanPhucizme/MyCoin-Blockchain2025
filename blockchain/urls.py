@@ -1,32 +1,12 @@
-"""
-URL configuration for blockchain project.
+# blockchain/urls.py
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
-from django.urls import path
-
-from wallet import views as wallet_views
+from django.urls import path, include # Đảm bảo có 'include'
 
 urlpatterns = [
+    # URL cho trang admin
     path('admin/', admin.site.urls),
-    path('', wallet_views.home, name='home'),
-    path('create_wallet/', wallet_views.create_wallet_view, name='create_wallet'),
-    path('wallet_created/', wallet_views.create_wallet_view, name='wallet_created'),
-
-    path('send_transaction/', wallet_views.send_transaction_view, name='send_transaction'),
-    path('transaction_receipt/<int:transaction_id>/', wallet_views.transaction_receipt, name='transaction_receipt'),
-    path('transaction/<int:transaction_id>/', wallet_views.transaction_detail_view, name='transaction_detail'),
-
+    
+    # Tất cả các URL còn lại sẽ được xử lý bởi file urls.py của app 'wallet'
+    path('', include('wallet.urls')),
 ]

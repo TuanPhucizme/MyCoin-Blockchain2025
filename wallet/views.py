@@ -73,41 +73,61 @@ def create_wallet_view(request):
 
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
-
 # ========== Gửi giao dịch ==========
 def send_transaction_view(request):
-    if request.method == "POST":
-        sender_address = request.session.get('wallet_address')
-        receiver_address = request.POST['receiver']
-        amount = Decimal(request.POST['amount'])
-        message = request.POST.get('message', '')
+    # Bước 1: Xác thực người dùng và lấy ví của họ
+    # Logic này phải được thực hiện cho cả GET và POST request
+    try:
+        current_wallet = Wallet.objects.get(address=request.session.get('wallet_address'))
+    except Wallet.DoesNotExist:
+        messages.error(request, "Bạn cần tạo hoặc đăng nhập vào ví để thực hiện giao dịch.")
+        return redirect('create_wallet')
 
+    # Bước 2: Xử lý khi người dùng gửi form (POST request)
+    if request.method == "POST":
+        receiver_address = request.POST.get('receiver')
+        message = request.POST.get('message', '')
+        
+        # --- Bắt đầu khối try-except để xử lý lỗi đầu vào ---
         try:
-            sender_wallet = Wallet.objects.get(address=sender_address)
+            amount = Decimal(request.POST.get('amount'))
             receiver_wallet = Wallet.objects.get(address=receiver_address)
+            # sender_wallet chính là current_wallet đã lấy ở trên
+            sender_wallet = current_wallet
+
         except Wallet.DoesNotExist:
-            messages.error(request, "Không tìm thấy ví người gửi hoặc người nhận.")
-            return redirect('send_transaction')
+            return JsonResponse({'success': False, 'error': 'Địa chỉ người nhận không tồn tại.'})
+        except (ValueError, TypeError, Decimal.InvalidOperation):
+            return JsonResponse({'success': False, 'error': 'Số tiền không hợp lệ.'})
+        # --- Kết thúc khối try-except ---
+
+        # --- Kiểm tra các quy tắc nghiệp vụ ---
+        if sender_wallet.address == receiver_wallet.address:
+            return JsonResponse({'success': False, 'error': 'Bạn không thể gửi tiền cho chính mình.'})
 
         if sender_wallet.balance < amount:
-            messages.error(request, "Số dư không đủ.")
-            return redirect('send_transaction')
-
+            error_message = f"Số dư không đủ. Bạn chỉ có {sender_wallet.balance} MYC."
+            return JsonResponse({'success': False, 'error': error_message})
+        
+        if amount <= 0:
+            return JsonResponse({'success': False, 'error': 'Số tiền phải lớn hơn 0.'})
+        
+        # 1. Cập nhật số dư
         sender_wallet.balance -= amount
         receiver_wallet.balance += amount
         sender_wallet.save()
         receiver_wallet.save()
 
+        # 2. Tạo đối tượng giao dịch và thực hiện PoW
+        # (Giữ nguyên toàn bộ logic mining của bạn)
         last_tx = Transaction.objects.order_by('-id').first()
         previous_hash = last_tx.hash if last_tx else '0'
         timestamp = timezone.now()
         index = last_tx.id + 1 if last_tx else 1
-
-        nonce, tx_hash = proof_of_work(index, sender_address, receiver_address, amount, message, timestamp, previous_hash)
-
+        nonce, tx_hash = proof_of_work(index, sender_wallet.address, receiver_wallet.address, amount, message, timestamp, previous_hash)
         tx = Transaction.objects.create(
-            sender=sender_address,
-            receiver=receiver_address,
+            sender=sender_wallet.address,
+            receiver=receiver_wallet.address,
             amount=amount,
             message=message,
             timestamp=timestamp,
@@ -116,11 +136,9 @@ def send_transaction_view(request):
             hash=tx_hash,
         )
         
-        # 1. Lấy channel layer
+        # 3. Gửi thông báo WebSocket đến người nhận
         channel_layer = get_channel_layer()
-        detail_url = reverse('transaction_detail', kwargs={'transaction_id': tx.id})
-
-        # 2. Chuẩn bị dữ liệu để gửi đi
+        detail_url = request.build_absolute_uri(reverse('transaction_detail', kwargs={'transaction_id': tx.id}))
         message_data = {
             'type': 'wallet_update',
             'balance': str(receiver_wallet.balance),
@@ -133,19 +151,22 @@ def send_transaction_view(request):
                 'detail_url': detail_url,
             }
         }
-
-        # 3. Gửi tin nhắn tới group của người nhận
         async_to_sync(channel_layer.group_send)(
             f"wallet_{receiver_address}",
-            {
-                'type': 'wallet.update',
-                'message': message_data 
-            }
+            {'type': 'wallet.update', 'message': message_data}
         )
-        messages.success(request, "Giao dịch thành công và đã được xác minh bằng Proof of Work.")
-        return redirect('transaction_receipt', transaction_id=tx.id)
 
-    return render(request, 'send_transaction.html')
+        # 4. Trả về kết quả thành công cho AJAX
+        redirect_url = reverse('transaction_receipt', kwargs={'transaction_id': tx.id})
+        return JsonResponse({'success': True, 'redirect_url': redirect_url})
+        # --- Kết thúc xử lý POST ---
+
+    # Bước 3: Nếu là GET request, chỉ render template
+    # Context được tạo ở đây, bên ngoài khối 'if request.method == "POST"'
+    context = {
+        'wallet': current_wallet
+    }
+    return render(request, 'send_transaction.html', context)
 
 # ========== Biên lai giao dịch ==========
 def transaction_receipt(request, transaction_id):

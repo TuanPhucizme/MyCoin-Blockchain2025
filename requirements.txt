@@ -20,5 +20,8 @@ requests==2.31.0
 # For environment variables
 python-dotenv==1.0.1
 
-# Optional: For better performance with Channels in production
-# channels-redis==4.2.0
+# ASGI Server for Django Channels
+daphne==4.1.0
+
+# For modern admin interface
+django-jazzmin==3.0.1

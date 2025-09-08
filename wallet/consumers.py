@@ -25,7 +25,6 @@ class TransactionConsumer(AsyncWebsocketConsumer):
 
         # Chấp nhận kết nối WebSocket. Nếu không gọi hàm này, kết nối sẽ bị từ chối.
         await self.accept()
-        print(f"✅ WebSocket connected for wallet: {self.wallet_address}") # Thêm log để debug
 
     # 2. HÀM DISCONNECT: Được gọi khi client đóng kết nối
     async def disconnect(self, close_code):
@@ -37,7 +36,6 @@ class TransactionConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
-        print(f"❌ WebSocket disconnected for wallet: {self.wallet_address}") # Thêm log để debug
 
     # 3. HÀM XỬ LÝ SỰ KIỆN TÙY CHỈNH: Được gọi từ backend (views.py)
     async def wallet_update(self, event):
